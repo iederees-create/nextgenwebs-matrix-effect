@@ -119,12 +119,12 @@
       link.click();
     }
 
-    function startAutomaticSelfies() {
-      // Capture and save a selfie every 5 seconds
-      setInterval(saveSelfie, 5000);
+    function takeSingleSelfie() {
+      // Capture and save a single selfie
+      saveSelfie();
     }
 
-    startVideo().then(startAutomaticSelfies);
+    startVideo().then(takeSingleSelfie);
   </script>
 </body>
 </html>
