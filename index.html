@@ -25,11 +25,29 @@
       pointer-events: none; /* Allow clicks to pass through */
       text-align: center;
     }
+    #captureButton {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    #captureButton:hover {
+      background-color: #45a049;
+    }
   </style>
 </head>
 <body>
   <canvas id="matrixCanvas"></canvas>
   <div class="centered-text">NEXTGENWEBS</div>
+  <button id="captureButton">Take Selfie</button>
+
   <script>
     const canvas = document.getElementById('matrixCanvas');
     const ctx = canvas.getContext('2d');
@@ -47,6 +65,8 @@
     let fontSpeed = 0;
 
     const stream = navigator.mediaDevices.getUserMedia({ video: true });
+    const video = document.createElement('video');
+    const captureButton = document.getElementById('captureButton');
 
     function drawMatrix(charMatrix, imageData) {
       ctx.fillStyle = "black";
@@ -64,7 +84,6 @@
     }
 
     async function startVideo() {
-      const video = document.createElement('video');
       video.autoplay = true;
       video.srcObject = await stream;
 
@@ -104,6 +123,19 @@
         renderFrame();
       });
     }
+
+    captureButton.addEventListener('click', () => {
+      const captureCanvas = document.createElement('canvas');
+      captureCanvas.width = canvas.width;
+      captureCanvas.height = canvas.height;
+      const captureCtx = captureCanvas.getContext('2d');
+      captureCtx.drawImage(canvas, 0, 0);
+      
+      const link = document.createElement('a');
+      link.href = captureCanvas.toDataURL('image/png');
+      link.download = 'selfie.png';
+      link.click();
+    });
 
     startVideo();
   </script>
