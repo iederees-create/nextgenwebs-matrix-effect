@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Matrix Background with Camera Feed</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: black;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="matrixCanvas"></canvas>
+  <script>
+    const canvas = document.getElementById('matrixCanvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const cellWidth = 10;
+    const cellHeight = 15;
+    const columns = Math.floor(canvas.width / cellWidth);
+    const rows = Math.floor(canvas.height / cellHeight);
+
+    const chars = " .,-~:;=!*#$@";
+    const norm = 255 / chars.length;
+    let fontSpeed = 0;
+
+    const stream = navigator.mediaDevices.getUserMedia({ video: true });
+
+    function drawMatrix(charMatrix, imageData) {
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < columns; x++) {
+          const char = charMatrix[y][x];
+          const color = imageData[y][x];
+          ctx.fillStyle = `rgb(${color.r}, ${color.g}, ${color.b})`;
+          ctx.fillText(char, x * cellWidth, y * cellHeight + fontSpeed);
+        }
+      }
+      fontSpeed = (fontSpeed + 1) % cellHeight;
+    }
+
+    async function startVideo() {
+      const video = document.createElement('video');
+      video.autoplay = true;
+      video.srcObject = await stream;
+
+      const imageCanvas = document.createElement('canvas');
+      const imageCtx = imageCanvas.getContext('2d');
+
+      video.addEventListener('play', () => {
+        function renderFrame() {
+          imageCanvas.width = columns;
+          imageCanvas.height = rows;
+
+          imageCtx.drawImage(video, 0, 0, columns, rows);
+          const frameData = imageCtx.getImageData(0, 0, columns, rows);
+          const charMatrix = [];
+          const colorMatrix = [];
+
+          for (let y = 0; y < rows; y++) {
+            const charRow = [];
+            const colorRow = [];
+            for (let x = 0; x < columns; x++) {
+              const offset = (y * columns + x) * 4;
+              const r = frameData.data[offset];
+              const g = frameData.data[offset + 1];
+              const b = frameData.data[offset + 2];
+              const gray = 0.3 * r + 0.59 * g + 0.11 * b;
+              const charIndex = Math.floor(gray / norm);
+              charRow.push(chars[charIndex]);
+              colorRow.push({ r, g, b });
+            }
+            charMatrix.push(charRow);
+            colorMatrix.push(colorRow);
+          }
+
+          drawMatrix(charMatrix, colorMatrix);
+          requestAnimationFrame(renderFrame);
+        }
+        renderFrame();
+      });
+    }
+
+    startVideo();
+  </script>
+</body>
+</html>
