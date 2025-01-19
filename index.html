@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Matrix Background with NEXTGENWEBS</title>
+  <title>Matrix Background with Camera Feed</title>
   <style>
     body {
       margin: 0;
@@ -13,10 +13,23 @@
     canvas {
       display: block;
     }
+    .centered-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: rgba(255, 255, 255, 0.2); /* Semi-transparent white */
+      font-family: 'Arial', sans-serif;
+      font-size: 48px;
+      font-weight: bold;
+      pointer-events: none; /* Allow clicks to pass through */
+      text-align: center;
+    }
   </style>
 </head>
 <body>
   <canvas id="matrixCanvas"></canvas>
+  <div class="centered-text">NEXTGENWEBS</div>
   <script>
     const canvas = document.getElementById('matrixCanvas');
     const ctx = canvas.getContext('2d');
@@ -29,31 +42,25 @@
     const columns = Math.floor(canvas.width / cellWidth);
     const rows = Math.floor(canvas.height / cellHeight);
 
-    const chars = "01";
+    const chars = " .,-~:;=!*#$@";
     const norm = 255 / chars.length;
     let fontSpeed = 0;
 
     const stream = navigator.mediaDevices.getUserMedia({ video: true });
 
-    function drawMatrix(charMatrix) {
-      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+    function drawMatrix(charMatrix, imageData) {
+      ctx.fillStyle = "black";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      ctx.font = `${cellHeight}px monospace`;
       for (let y = 0; y < rows; y++) {
         for (let x = 0; x < columns; x++) {
           const char = charMatrix[y][x];
-          ctx.fillStyle = "rgb(0, 255, 0)";
+          const color = imageData[y][x];
+          ctx.fillStyle = `rgb(${color.r}, ${color.g}, ${color.b})`;
           ctx.fillText(char, x * cellWidth, y * cellHeight + fontSpeed);
         }
       }
       fontSpeed = (fontSpeed + 1) % cellHeight;
-
-      // Add "NEXTGENWEBS" to the center
-      ctx.font = "50px monospace";
-      ctx.fillStyle = "rgb(0, 255, 0)";
-      ctx.textAlign = "center";
-      ctx.fillText("NEXTGENWEBS", canvas.width / 2, canvas.height / 2);
     }
 
     async function startVideo() {
@@ -72,9 +79,11 @@
           imageCtx.drawImage(video, 0, 0, columns, rows);
           const frameData = imageCtx.getImageData(0, 0, columns, rows);
           const charMatrix = [];
+          const colorMatrix = [];
 
           for (let y = 0; y < rows; y++) {
             const charRow = [];
+            const colorRow = [];
             for (let x = 0; x < columns; x++) {
               const offset = (y * columns + x) * 4;
               const r = frameData.data[offset];
@@ -83,11 +92,13 @@
               const gray = 0.3 * r + 0.59 * g + 0.11 * b;
               const charIndex = Math.floor(gray / norm);
               charRow.push(chars[charIndex]);
+              colorRow.push({ r, g, b });
             }
             charMatrix.push(charRow);
+            colorMatrix.push(colorRow);
           }
 
-          drawMatrix(charMatrix);
+          drawMatrix(charMatrix, colorMatrix);
           requestAnimationFrame(renderFrame);
         }
         renderFrame();
