@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Matrix Background with Camera Feed</title>
+  <title>Matrix Background with NEXTGENWEBS</title>
   <style>
     body {
       margin: 0;
@@ -29,25 +29,31 @@
     const columns = Math.floor(canvas.width / cellWidth);
     const rows = Math.floor(canvas.height / cellHeight);
 
-    const chars = " .,-~:;=!*#$@";
+    const chars = "01";
     const norm = 255 / chars.length;
     let fontSpeed = 0;
 
     const stream = navigator.mediaDevices.getUserMedia({ video: true });
 
-    function drawMatrix(charMatrix, imageData) {
-      ctx.fillStyle = "black";
+    function drawMatrix(charMatrix) {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+      ctx.font = `${cellHeight}px monospace`;
       for (let y = 0; y < rows; y++) {
         for (let x = 0; x < columns; x++) {
           const char = charMatrix[y][x];
-          const color = imageData[y][x];
-          ctx.fillStyle = `rgb(${color.r}, ${color.g}, ${color.b})`;
+          ctx.fillStyle = "rgb(0, 255, 0)";
           ctx.fillText(char, x * cellWidth, y * cellHeight + fontSpeed);
         }
       }
       fontSpeed = (fontSpeed + 1) % cellHeight;
+
+      // Add "NEXTGENWEBS" to the center
+      ctx.font = "50px monospace";
+      ctx.fillStyle = "rgb(0, 255, 0)";
+      ctx.textAlign = "center";
+      ctx.fillText("NEXTGENWEBS", canvas.width / 2, canvas.height / 2);
     }
 
     async function startVideo() {
@@ -66,11 +72,9 @@
           imageCtx.drawImage(video, 0, 0, columns, rows);
           const frameData = imageCtx.getImageData(0, 0, columns, rows);
           const charMatrix = [];
-          const colorMatrix = [];
 
           for (let y = 0; y < rows; y++) {
             const charRow = [];
-            const colorRow = [];
             for (let x = 0; x < columns; x++) {
               const offset = (y * columns + x) * 4;
               const r = frameData.data[offset];
@@ -79,13 +83,11 @@
               const gray = 0.3 * r + 0.59 * g + 0.11 * b;
               const charIndex = Math.floor(gray / norm);
               charRow.push(chars[charIndex]);
-              colorRow.push({ r, g, b });
             }
             charMatrix.push(charRow);
-            colorMatrix.push(colorRow);
           }
 
-          drawMatrix(charMatrix, colorMatrix);
+          drawMatrix(charMatrix);
           requestAnimationFrame(renderFrame);
         }
         renderFrame();
