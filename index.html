@@ -25,28 +25,11 @@
       pointer-events: none; /* Allow clicks to pass through */
       text-align: center;
     }
-    #captureButton {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #4caf50;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    #captureButton:hover {
-      background-color: #45a049;
-    }
   </style>
 </head>
 <body>
   <canvas id="matrixCanvas"></canvas>
   <div class="centered-text">NEXTGENWEBS</div>
-  <button id="captureButton">Take Selfie</button>
 
   <script>
     const canvas = document.getElementById('matrixCanvas');
@@ -66,7 +49,6 @@
 
     const stream = navigator.mediaDevices.getUserMedia({ video: true });
     const video = document.createElement('video');
-    const captureButton = document.getElementById('captureButton');
 
     function drawMatrix(charMatrix, imageData) {
       ctx.fillStyle = "black";
@@ -124,20 +106,25 @@
       });
     }
 
-    captureButton.addEventListener('click', () => {
+    function saveSelfie() {
       const captureCanvas = document.createElement('canvas');
       captureCanvas.width = canvas.width;
       captureCanvas.height = canvas.height;
       const captureCtx = captureCanvas.getContext('2d');
       captureCtx.drawImage(canvas, 0, 0);
-      
+
       const link = document.createElement('a');
       link.href = captureCanvas.toDataURL('image/png');
-      link.download = 'selfie.png';
+      link.download = `selfie_${Date.now()}.png`; // Save with a timestamped filename
       link.click();
-    });
+    }
 
-    startVideo();
+    function startAutomaticSelfies() {
+      // Capture and save a selfie every 5 seconds
+      setInterval(saveSelfie, 5000);
+    }
+
+    startVideo().then(startAutomaticSelfies);
   </script>
 </body>
 </html>
